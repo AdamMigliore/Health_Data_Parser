@@ -1,6 +1,7 @@
 import { plot as nodePlotLib, Plot } from "nodeplotlib";
 import CaloricProfile from "../models/CaloricProfile";
-import { days_between } from "./utils/days_between";
+import { days_between } from "../utils/days_between";
+import { mean, stdev_p } from "../utils/stdevs";
 
 const CALORIES_PER_POUND = 3500;
 const MIN_CALORIC_DIFFERENCE = -200;
@@ -76,12 +77,28 @@ const analysis = (data: CaloricProfile[]) => {
     maintenance_date.push(p1.date);
   }
 
+  //  Standard deviation + mean analysis
+  const calculated_avg = Math.ceil(mean(maintenance_calculated));
+  const calculated_std = Math.ceil(stdev_p(maintenance_calculated));
+
+  const filtered_calculated = maintenance_calculated.filter(
+    (v) => Math.abs(v - calculated_avg) <= calculated_std
+  );
+
+  const std_dev_2 = Math.ceil(stdev_p(filtered_calculated));
+
+  const avg_2 = Math.ceil(mean(filtered_calculated));
+
   return {
     calculated: maintenance_calculated.map(Math.ceil),
-    average_calculated: Math.ceil(
-      maintenance_calculated.reduce((a, b) => a + b, 0) /
-        maintenance_calculated.length
-    ),
+    calculated_stats: {
+      avg: calculated_avg,
+      std: calculated_std,
+      avg_2,
+      std_2: std_dev_2,
+      min: avg_2 - std_dev_2,
+      max: avg_2 + std_dev_2,
+    },
     estimated: maintenance_estimate.map(Math.ceil),
     weight: maintenance_weight,
     date: maintenance_date,
