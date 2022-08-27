@@ -4,11 +4,13 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
+    "clean": "rm -r ./build",
     "build": "tsc",
     "health": "node ./build/index.js",
     "renpho": "node ./build/Renpho/renpho.js",
     "mfp": "node ./build/MyFitnessPal/mfp.js",
     "apple": "node ./build/Apple/apple.js",
+    "apple:maintenance": "node ./build/Apple/apple.js && node ./build/Apple/analyze.js",
     "analysis": "node ./build/Analysis/analyze.js",
     "watch": "npx tsc -w",
     "test": "jest"

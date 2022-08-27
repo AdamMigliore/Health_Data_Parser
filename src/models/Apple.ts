@@ -18,6 +18,8 @@ interface AppleDataModel {
   sourceName: string;
   creationDate: Date;
   value: number;
+  startDate: string;
+  endDate: string;
 }
 
 export default AppleDataModel;

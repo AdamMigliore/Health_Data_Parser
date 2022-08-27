@@ -12,7 +12,7 @@ import { to_time } from "../utils/format_timer";
 //  Indexed by date (yyyy-mm-dd)
 const hmap = new Map<string, HMapEntry>();
 
-interface HMapEntry {
+export interface HMapEntry {
   date: Date;
   activeEnergyBurned: number;
   basalEnergyBurned: number;
@@ -37,12 +37,15 @@ const parse = async (filename: string, output: string) => {
       attrs.sourceName.match(/[Aa]dam.*/)
     ) {
       //  3- Transform
-      const { type, creationDate, sourceName, value } = attrs;
+      const { type, creationDate, sourceName, value, startDate, endDate } =
+        attrs;
       const rec: AppleDataModel = {
         type,
         creationDate: new Date(creationDate),
         sourceName,
         value: Number.parseFloat(value),
+        startDate,
+        endDate,
       };
 
       //  4- Aggregate
@@ -71,7 +74,8 @@ const parse = async (filename: string, output: string) => {
 // TODO: Review this code
 const aggregate = (entry: AppleDataModel) => {
   //  Get HMapEntry
-  const key = entry.creationDate.toISOString().substring(0, 10);
+  const key = to_key(entry.endDate);
+  //const key = entry.creationDate.toISOString().substring(0, 10);
 
   const existing_entry = hmap.get(key);
 
@@ -98,4 +102,8 @@ const aggregate = (entry: AppleDataModel) => {
   }
 };
 
-export { parse, HMapEntry };
+const to_key = (date: string) => {
+  return date.substring(0, 10);
+};
+
+export { parse };
