@@ -1,7 +1,7 @@
 import fs from "fs";
 import { between } from "../utils/between";
 import { days_to_ms } from "../utils/days_to_ms";
-import { mean, stdev_p } from "../utils/stdevs";
+import { mean } from "../utils/stdevs";
 import { HMapEntry } from "./transformer";
 
 type Filter<T> = (value: T, index: number, array: T[]) => boolean;
@@ -23,34 +23,30 @@ const analyze = (input: string, filters: Filter<HMapEntry>[]) => {
   const maintenance_calories = filtered_data.map(
     (e) => e.activeEnergyBurned + e.basalEnergyBurned
   );
-  const stdev = stdev_p(maintenance_calories);
-  const mean_ = mean(maintenance_calories);
 
-  const maintenance_calories_filtered = maintenance_calories.filter(
-    (e) => e > mean_ - stdev && e < mean_ + stdev
-  );
-  const mean_on_maintenance = mean(maintenance_calories_filtered);
+  const mean_on_maintenance = mean(maintenance_calories);
 
   console.log(`Maintenance mean: ${Math.ceil(mean_on_maintenance)}`);
 };
 
 const filter_all_data = <T>(data: T[], filters: Filter<T>[]) => {
   return data.filter((v, i, a) =>
-    filters.map((f) => f(v, i, a)).reduce((p, c) => p && c, true)
+    filters.map((f) => f(v, i, a)).every((v) => v)
   );
 };
 
-const filter_by_last_x_days: Filter<HMapEntry> = (value: HMapEntry) => {
-  const LAST_X_DAYS = 180;
+const filter_by_last_x_days = (days: number) => {
   const NOW = Date.now();
-  const LAST_DAY = new Date(NOW - days_to_ms(LAST_X_DAYS));
-  return value.date < LAST_DAY;
+  const LAST_DAY = new Date(NOW - days_to_ms(days));
+  return (value: HMapEntry) => value.date > LAST_DAY;
 };
 
-const filter_between_days: Filter<HMapEntry> = (value: HMapEntry) => {
-  const start = new Date("2022-04-24");
-  const end = new Date("2022-05-21");
-  return between(value.date, start, end);
+const filter_between_days = (start: string, end: string) => {
+  return (value: HMapEntry) =>
+    between(value.date, new Date(start), new Date(end));
 };
 
-analyze("./data/transformed/apple.json", [filter_between_days]);
+analyze("./data/transformed/apple.json", [
+  filter_by_last_x_days(180),
+  filter_between_days("2022-04-15", "2022-08-15"),
+]);
